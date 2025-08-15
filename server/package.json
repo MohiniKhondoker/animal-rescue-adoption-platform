@@ -1,8 +1,9 @@
 {
-  "name": "thriftstore-backend",
+  "name": "animalrescueadoptionplatform-backend",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
+    "dev": "nodemon --watch . --ext js,json --signal SIGTERM server.js",
     "start": "node server.js"
   },
   "dependencies": {
@@ -13,5 +14,8 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.3.1",
     "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }

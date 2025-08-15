@@ -3,12 +3,14 @@ import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 export default function SellerDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState(''); // amount as string input
   const [image, setImage] = useState(null);
+  const [category, setCategory] = useState('');
+  const CATEGORY_OPTIONS = ['Cat', 'Dog', 'Bird', 'Rabbit', 'Fish', 'Reptile', 'Other'];
   const [error, setError] = useState('');
   const [complaintMsg, setComplaintMsg] = useState('');
 
@@ -35,7 +37,8 @@ export default function SellerDashboard() {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
-    formData.append('amount', amount);
+  formData.append('amount', amount);
+  if (category) formData.append('category', category);
     if (image) formData.append('image', image);
 
     try {
@@ -45,7 +48,8 @@ export default function SellerDashboard() {
       setName('');
       setDescription('');
       setAmount('');
-      setImage(null);
+  setImage(null);
+  setCategory('');
       setError('');
       fetchProducts();
     } catch (err) {
@@ -70,9 +74,7 @@ export default function SellerDashboard() {
   return (
     <div>
       <h2>Seller Dashboard</h2>
-      <p>
-        Welcome, {user.name} <button onClick={logout}>Logout</button>
-      </p>
+  {/* Navbar handles logout and user greeting */}
 
       <h3>Add Product</h3>
       <form onSubmit={handleSubmit} encType="multipart/form-data">
@@ -94,6 +96,15 @@ export default function SellerDashboard() {
           onChange={e => setAmount(e.target.value)}
           required
         />
+        <label>
+          Category
+          <select value={category} onChange={e => setCategory(e.target.value)} style={{ marginLeft: 8 }}>
+            <option value="">Select</option>
+            {CATEGORY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </label>
         <input type="file" onChange={e => setImage(e.target.files[0])} />
         <button type="submit">Add Product</button>
       </form>
@@ -104,7 +115,7 @@ export default function SellerDashboard() {
       <ul>
         {products.map(p => (
           <li key={p._id}>
-            <strong>{p.name}</strong> - {p.amount} Taka<br />
+            <strong>{p.name}</strong> - {p.amount} Taka {p.category ? `| ${p.category}` : ''}<br />
             {p.imageUrl && (
               <img
                 src={`http://localhost:5000/${p.imageUrl}`}

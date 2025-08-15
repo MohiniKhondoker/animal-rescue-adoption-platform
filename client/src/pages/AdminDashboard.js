@@ -3,7 +3,7 @@ import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
   const [complaints, setComplaints] = useState([]);
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <h2>Admin Dashboard</h2>
-      <p>Welcome, {user.name} <button onClick={logout}>Logout</button></p>
+  {/* Navbar handles logout and user greeting */}
 
       <h3>Users</h3>
       <ul>

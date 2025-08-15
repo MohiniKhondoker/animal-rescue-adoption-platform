@@ -1,31 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axios';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 export default function CustomerProducts() {
   const [products, setProducts] = useState([]);
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [complaintMsg, setComplaintMsg] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const { add } = useCart();
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    fetchProducts();
+    fetchCategories();
   }, []);
 
-  async function fetchProducts() {
+  useEffect(() => {
+    fetchProducts(selectedCategory, query);
+  }, [selectedCategory, query]);
+
+  async function fetchProducts(category, q) {
     try {
-      const res = await axios.get('/products/all');
+      const params = {};
+      if (category) params.category = category;
+      if (q && q.trim()) params.q = q.trim();
+      const res = await axios.get('/products/all', { params });
       setProducts(res.data);
     } catch (err) {
       console.error('Failed to fetch products', err);
     }
   }
 
-  function handleLogout() {
-    logout();
-    navigate('/login');
+  async function fetchCategories() {
+    try {
+      const res = await axios.get('/products/categories');
+      setCategories(res.data);
+    } catch (e) {
+      // ignore
+    }
   }
+
+  // Logout handled via Navbar only
 
   const submitComplaint = async () => {
     if (!complaintMsg.trim()) {
@@ -44,10 +60,25 @@ export default function CustomerProducts() {
   return (
     <div>
       <h2>Available Products</h2>
-      <p>
-        Welcome, {user?.name}{' '}
-        <button onClick={handleLogout}>Logout</button>
-      </p>
+      <div style={{ marginBottom: 10, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <label>
+          Category:{' '}
+          <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+            <option value="">All</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <input
+          type="text"
+          placeholder="Search by name or description"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ flex: 1 }}
+        />
+      </div>
+  {/* Navbar handles user info & logout */}
       {products.length === 0 && <p>No products available.</p>}
       <ul>
         {products.map(p => (
@@ -57,6 +88,7 @@ export default function CustomerProducts() {
             <p>
               <strong>Amount:</strong> {p.amount} Taka
             </p>
+            <p><strong>Category:</strong> {p.category || 'General'}</p>
             <p><strong>Seller:</strong> {p.sellerId?.name || 'Unknown'}</p>
             {p.imageUrl && (
               <img
@@ -66,6 +98,16 @@ export default function CustomerProducts() {
                 style={{ border: '1px solid #ccc', padding: '5px' }}
               />
             )}
+            <div style={{ marginTop: 8 }}>
+              <button onClick={() => navigate('/product', { state: { product: p } })}>
+                View Details
+              </button>
+              {p.isSold ? (
+                <span style={{ marginLeft: 12, color: 'red', fontWeight: 'bold' }}>SOLD</span>
+              ) : (
+                <button onClick={() => add(p, 1)} style={{ marginLeft: 8 }}>Add to Cart</button>
+              )}
+            </div>
           </li>
         ))}
       </ul>

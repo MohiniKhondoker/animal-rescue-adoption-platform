@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Complaint = require('../models/Complaint');
+const path = require('path');
 
 exports.getAllUsers = async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
@@ -67,5 +68,31 @@ exports.deleteProduct = async (req, res) => {
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Admin: add a new product/pet, optionally for a given sellerId
+exports.adminAddProduct = async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+  try {
+    const { name, description, amount, category, sellerId } = req.body;
+    const imageUrl = req.file ? req.file.path : null;
+    if (!name || !amount) return res.status(400).json({ message: 'Name and amount are required' });
+
+    const owner = sellerId ? await User.findById(sellerId) : req.user;
+    if (!owner) return res.status(400).json({ message: 'Invalid sellerId' });
+
+    const product = new Product({
+      sellerId: owner._id,
+      name,
+      description,
+      amount,
+      category: category || 'General',
+      imageUrl,
+    });
+    await product.save();
+    res.status(201).json(product);
+  } catch (e) {
+    res.status(500).json({ message: 'Server error', error: e.message });
   }
 };
