@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import api from '../api/axios';
+import { useAuth } from './AuthContext';
+import { toast } from 'react-toastify';
 
 const CartCtx = createContext();
 
 export function CartProvider({ children }) {
+  const { user } = useAuth();
   const [items, setItems] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('cart') || '[]');
@@ -24,10 +27,18 @@ export function CartProvider({ children }) {
       const res = await api.get(`/products/${product._id}`);
       const fresh = res.data;
       if (fresh.isSold) return; // silently ignore
+      // Prevent seller from adding their own product
+      const sellerId = typeof fresh.sellerId === 'string' ? fresh.sellerId : fresh.sellerId?._id;
+      const currentUserId = user?._id;
+      if (sellerId && currentUserId && String(sellerId) === String(currentUserId)) {
+        toast.error("You can't add your own product");
+        return;
+      }
       // If already in cart, do nothing (1 product per user)
       const exists = items.some((i) => i._id === product._id);
       if (exists) return;
       persist([...items, { ...fresh, quantity: 1 }]);
+      toast.success('Product added to cart succesfully');
     } catch (_) {
       // ignore add if product not found/unavailable
     }

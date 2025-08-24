@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from '../api/axios';
+import axios, { buildImageUrl } from '../api/axios';
 import { Link } from 'react-router-dom';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 
 export default function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -35,53 +40,44 @@ export default function MyOrders() {
     }
   };
 
-  if (loading) return <div>Loading orders...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+  if (loading) return <Container maxWidth="md" sx={{ mt: 3 }}><Typography>Loading orders...</Typography></Container>;
+  if (error) return <Container maxWidth="md" sx={{ mt: 3 }}><Typography color="error.main">{error}</Typography></Container>;
 
   return (
-    <div>
-      <h2>My Orders</h2>
-      {orders.length === 0 && <p>No orders yet.</p>}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {orders.map((o) => (
-          <li key={o._id} style={{ border: '1px solid #eee', padding: 12, marginBottom: 10 }}>
-            <div><strong>Order ID:</strong> {o._id}</div>
-            <div><strong>Status:</strong> {o.status}</div>
-            <div><strong>Placed:</strong> {new Date(o.createdAt).toLocaleString()}</div>
-            <div><strong>Items:</strong> {o.items?.length || 0}</div>
-            <div><strong>Total:</strong> {Number(o.total || 0).toFixed(2)}</div>
-            {Array.isArray(o.items) && o.items.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <div><strong>Products</strong></div>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {o.items.map((it, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                      {it.imageUrl && (
-                        <img
-                          src={`http://localhost:5000/${it.imageUrl}`}
-                          alt={it.name}
-                          width="60"
-                          style={{ marginRight: 10, border: '1px solid #ddd', padding: 2 }}
-                        />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <div>{it.name}</div>
-                        <div>{it.amount} × {it.quantity || 1}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+    <Container maxWidth="md" sx={{ mt: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>My Orders</Typography>
+      {orders.length === 0 && <Typography>No orders yet.</Typography>}
+      {orders.map((o) => (
+        <Paper key={o._id} sx={{ p: 2, mb: 2 }}>
+          <Typography variant="subtitle2">Order ID: {o._id}</Typography>
+          <Typography variant="body2">Status: {o.status}</Typography>
+          <Typography variant="body2">Placed: {new Date(o.createdAt).toLocaleString()}</Typography>
+          <Typography variant="body2">Items: {o.items?.length || 0}</Typography>
+          <Typography variant="body2">Total: {Number(o.total || 0).toFixed(2)}</Typography>
+          {Array.isArray(o.items) && o.items.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="subtitle2">Products</Typography>
+              {o.items.map((it, idx) => (
+                <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 0.5 }}>
+                  {it.imageUrl && (
+                    <Box component="img" src={buildImageUrl(it.imageUrl)} alt={it.name} sx={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 1, border: '1px solid', borderColor: 'divider' }} />
+                  )}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2">{it.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">{it.amount} × {it.quantity || 1}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
+          <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button size="small" component={Link} to={`/track/${o._id}`}>Track details</Button>
+            {o.status !== 'cancelled' && (
+              <Button size="small" color="error" onClick={() => cancelOrder(o._id)}>Cancel order</Button>
             )}
-            <div style={{ marginTop: 8, display: 'flex', gap: 10, alignItems: 'center' }}>
-              <Link to={`/track/${o._id}`}>Track details</Link>
-              {o.status !== 'cancelled' && (
-                <button onClick={() => cancelOrder(o._id)} style={{ color: 'red' }}>Cancel order</button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+          </Box>
+        </Paper>
+      ))}
+    </Container>
   );
 }

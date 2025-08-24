@@ -6,6 +6,9 @@ const {
   getAllProducts,
   getAllComplaints,
   promoteUserToAdmin,
+  setUserBlocked,
+  setUserApproved,
+  analytics,
   deleteUser,
   deleteProduct,
   adminAddProduct,
@@ -25,6 +28,9 @@ router.get('/users', authMiddleware, getAllUsers);
 router.get('/products', authMiddleware, getAllProducts);
 router.get('/complaints', authMiddleware, getAllComplaints);
 router.post('/promote/:userId', authMiddleware, promoteUserToAdmin);
+router.post('/user/:userId/block', authMiddleware, setUserBlocked);
+router.post('/user/:userId/approve', authMiddleware, setUserApproved);
+router.get('/analytics', authMiddleware, analytics);
 
 // New routes:
 router.delete('/user/:userId', authMiddleware, deleteUser);

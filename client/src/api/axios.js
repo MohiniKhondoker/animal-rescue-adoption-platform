@@ -4,7 +4,7 @@ import axios from 'axios';
 // - REACT_APP_API_URL: e.g. http://192.168.1.100:5000/api for cross-device/dev
 // - Same-host fallback: http(s)://<current-host>:5000/api when running client and server on same machine
 // - Final fallback: http://localhost:5000/api
-function resolveBaseURL() {
+export function resolveBaseURL() {
   const envUrl = process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim();
   if (envUrl) return envUrl;
 
@@ -35,3 +35,28 @@ instance.interceptors.request.use((config) => {
 });
 
 export default instance;
+
+// Media base URL (for images under /uploads) derived from API base
+export function getMediaBaseURL() {
+  const envUrl = process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim();
+  if (envUrl) {
+    try {
+      const u = new URL(envUrl);
+      return `${u.protocol}//${u.host}`;
+    } catch (_) {
+      // Fallback: strip trailing /api if present
+      return envUrl.replace(/\/?api\/?$/, '');
+    }
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:5000`;
+  }
+  return 'http://localhost:5000';
+}
+
+export function buildImageUrl(relativePath) {
+  if (!relativePath) return '';
+  const base = getMediaBaseURL();
+  return `${base}/${String(relativePath).replace(/^\//, '')}`;
+}

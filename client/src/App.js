@@ -1,5 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SellerDashboard from './pages/SellerDashboard';
@@ -14,9 +16,14 @@ import ProfilePage from './pages/ProfilePage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
+import ComplaintForm from './pages/ComplaintForm';
+import Container from '@mui/material/Container';
+import Donate from './pages/Donate';
+import DonationHistory from './pages/DonationHistory';
 
 function PrivateRoute({ children, roles }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null; // or a spinner
   if (!user) return <Navigate to="/login" />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/login" />;
   return children;
@@ -27,6 +34,8 @@ function App() {
     <AuthProvider>
   <CartProvider>
   <Navbar />
+  <ToastContainer position="top-right" autoClose={2500} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="colored" />
+  <Container sx={{ py: 2 }}>
   <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -49,6 +58,30 @@ function App() {
         {/* Customer browsing routes */}
         <Route path="/products" element={<CustomerProducts />} />
   <Route path="/product" element={<ProductDetail />} />
+  <Route
+    path="/complaint"
+    element={
+      <PrivateRoute roles={['customer','seller']}>
+        <ComplaintForm />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/donate"
+    element={
+      <PrivateRoute roles={['customer','seller']}>
+        <Donate />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/donations"
+    element={
+      <PrivateRoute roles={['customer','seller','admin']}>
+        <DonationHistory />
+      </PrivateRoute>
+    }
+  />
   <Route path="/cart" element={<CartPage />} />
   <Route path="/checkout" element={<CheckoutPage />} />
   <Route path="/track/:id" element={<TrackOrderPage />} />
@@ -70,7 +103,8 @@ function App() {
         />
         
         <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
+    </Routes>
+  </Container>
       </CartProvider>
     </AuthProvider>
   );
